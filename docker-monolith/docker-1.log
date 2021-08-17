@@ -1,0 +1,5 @@
+REPOSITORY                         TAG       IMAGE ID       CREATED              SIZE
+alexandercheotus/ubuntu-tmp-file   latest    a75441c3cd1b   About a minute ago   63.1MB
+nginx                              latest    dd34e67e3371   5 hours ago          133MB
+ubuntu                             18.04     39a8cfeef173   3 weeks ago          63.1MB
+hello-world                        latest    d1165f221234   5 months ago         13.3kB
