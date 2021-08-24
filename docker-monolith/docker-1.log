@@ -1,0 +1,9 @@
+REPOSITORY                         TAG       IMAGE ID       CREATED              SIZE
+alexandercheotus/ubuntu-tmp-file   latest    a75441c3cd1b   About a minute ago   63.1MB
+nginx                              latest    dd34e67e3371   5 hours ago          133MB
+ubuntu                             18.04     39a8cfeef173   3 weeks ago          63.1MB
+hello-world                        latest    d1165f221234   5 months ago         13.3kB
+
+docker image - неизменяемый/immutable "снимок" файлов приложения и его зависимостей (в идеале, а вообще любых файлов) (неизменяемый без добавления очередного read-only слоя, но это будет уже другой image).
+docker container имеет слой чтения-записи поверх read-only слоев docker image из которого этот контейнер создан.
+Из анализа различий между inspect <container_id> и inspect <image_id>: контейнер имеет секцию настроек сети, логирования, ООМ-киллера, ЦПУ, памяти, время старта и т.д.
