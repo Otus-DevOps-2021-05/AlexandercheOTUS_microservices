@@ -9,7 +9,7 @@ services:
       - reddit
   ui:
     env_file: .env
-    build: ./ui
+   # build: ./ui
     image: ${USERNAME}/ui:${UI_VER}
     ports:
       - ${EXT_PORT}:${INT_PORT}/tcp
@@ -17,13 +17,13 @@ services:
       - reddit
   post:
     env_file: .env
-    build: ./post-py
+   # build: ./post-py
     image: ${USERNAME}/post:${POST_VER}
     networks:
       - reddit
   comment:
     env_file: .env
-    build: ./comment
+   # build: ./comment
     image: ${USERNAME}/comment:${COMMENT_VER}
     networks:
       - reddit
