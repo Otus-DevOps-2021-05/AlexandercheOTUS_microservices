@@ -27,9 +27,23 @@ services:
     image: ${USERNAME}/comment:${COMMENT_VER}
     networks:
       - reddit
+  prometheus:
+    image: ${USER_NAME}/prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - prometheus_data:/prometheus
+    command:
+    # Передаем доп параметры вкомандной строке
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention=1d'
+    networks:
+      - reddit
 
 volumes:
   post_db:
+  prometheus_data:
 
 networks:
   reddit:
