@@ -19,4 +19,7 @@ AlexandercheOTUS microservices repository
 #### "Gitlab CI. Построение процесса непрерывной интеграции"
 ##### Создана виртуалка в яндекс для контейнеров. Запущен контейнер с Gitlab. Gitlab настроен (пароль root, отключена регистрация, добавлены группа и проект). Запущен контейнере с runner. Склонирован код приложения reddit. Пайплайн описан в .gitlab-ci.yml: build-test-deploy, build-test-review (в dev-среду и вручную в stage и prod), deploy в stage и prod по git tag, динамические env для каждой ветки.
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
-
+#### Домашнее задание №17
+#### "Создание и запуск системы мониторинга Prometheus"
+##### Создана виртуалка в яндекс для контейнеров. Запущен контейнер с prometheus. Изменена структура файлов и каталогов. Добавлены Dockerfile для контейнера prometheus и конфиг prometheus.yml с endpoint-ами. Собран контейнер prometheus. В каталоге /src собраны скриптами docker_build.sh контейнеры с ui, post-py и comment. В docker-compose.yml добавлен prometheus, контейнеры с сервисами подняты. В docker-compose.yml добавлен node-exporter, в prometheus.yml добавлен для него endpoint. Контейнер prometheus пересобран, docker-compose перезапущен. Контейнеры запушены в dockerhub: [ui](https://hub.docker.com/repository/docker/paradoxalien/ui), [comment](https://hub.docker.com/repository/docker/paradoxalien/comment), [post](https://hub.docker.com/repository/docker/paradoxalien/post) и [prometheus](https://hub.docker.com/repository/docker/paradoxalien/prometheus).
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
