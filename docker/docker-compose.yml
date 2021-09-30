@@ -2,11 +2,14 @@ version: '3.3'
 services:
   post_db:
     env_file: .env
-    image: mongo:${MOGO_VER}
+    image: mongo:${MONGO_VER}
     volumes:
       - post_db:/data/db
     networks:
-      - reddit
+      reddit:
+        aliases:
+          - post_db
+          - comment_db
   ui:
     env_file: .env
    # build: ./ui
@@ -28,7 +31,8 @@ services:
     networks:
       - reddit
   prometheus:
-    image: ${USER_NAME}/prometheus
+    env_file: .env
+    image: ${USERNAME}/prometheus
     ports:
       - 9090:9090
     volumes:
