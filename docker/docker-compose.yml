@@ -16,6 +16,11 @@ services:
     image: ${USERNAME}/ui:${UI_VER}
     ports:
       - ${EXT_PORT}:${INT_PORT}/tcp
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: localhost:24224
+        tag: service.ui
     networks:
       - reddit
   post:
