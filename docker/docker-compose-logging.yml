@@ -30,5 +30,12 @@ services:
     networks:
       - reddit
 
+  zipkin:
+    image: openzipkin/zipkin:2.21.0
+    ports:
+      - "9411:9411"
+    networks:
+      - reddit
+
 networks:
   reddit:
