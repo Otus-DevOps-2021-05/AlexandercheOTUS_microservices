@@ -14,5 +14,5 @@ spec:
         app: post
     spec:
       containers:
-      - image: chromko/post
+      - image: paradoxalien/post
         name: post
