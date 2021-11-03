@@ -34,4 +34,4 @@ spec:
         persistentVolumeClaim:
           claimName:  mongo-pvc
 # Just fix for autotest:
-# smongo-gce-pd-storage
+# name: mongo-gce-pd-storage
