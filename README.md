@@ -281,3 +281,96 @@ NodePort:                 <unset>  32092/TCP
 ##### http://178.154.200.220:32092/
 ##### http://178.154.203.199:32092/
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
+#### Домашнее задание №21
+#### "Настройка балансировщиков нагрузки в Kubernetes и SSL­Terminating"
+##### 1. Селекторные (pod выбирается автоматически) сервисы типа ClusterIP (доступен только изнутри кластера):
+```
+$ kubectl get service -n dev
+NAME         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+comment      ClusterIP   10.96.249.42    <none>        9292/TCP         2d6h
+comment-db   ClusterIP   10.96.130.58    <none>        27017/TCP        2d6h
+mongodb      ClusterIP   10.96.234.23    <none>        27017/TCP        2d6h
+post         ClusterIP   10.96.159.34    <none>        5000/TCP         2d6h
+post-db      ClusterIP   10.96.241.232   <none>        27017/TCP        2d6h
+ui           NodePort    10.96.137.21    <none>        9292:32092/TCP   2d6h
+```
+##### 2. Погасим dns:
+```
+$ kubectl scale deployment --replicas 0 -n kube-system kube-dns-autoscaler - сервис следит kube-dns
+$ kubectl scale deployment --replicas 0 -n kube-system coredns
+$ kubectl get pods -A
+$ kubectl exec -ti -n dev post-d577d7bcb-hjp9b ping comment
+kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
+ping: bad address 'comment'
+command terminated with exit code 1
+```
+##### 3. Вернем обратно dns:
+```
+$ kubectl scale deployment --replicas 1 -n kube-system kube-dns-autoscaler
+$ kubectl get pods -A | grep dns
+kube-system   coredns-7bc8cf4789-7r64j                 1/1     Running   0          34s
+kube-system   coredns-7bc8cf4789-jhzsm                 1/1     Running   0          34s
+kube-system   kube-dns-autoscaler-598db8ff9c-hfd76     1/1     Running   0          39s
+http://178.154.200.220:32092/ и http://178.154.200.220:32092/ - работают
+```
+##### 4. Добавим LoadBalancer:
+```
+$ nano kubernetes/reddit/ui-service.yml
+$ kubectl apply -f kubernetes/reddit/ui-service.yml -n dev
+$ kubectl get service  -n dev --selector component=ui
+NAME   TYPE           CLUSTER-IP     EXTERNAL-IP       PORT(S)        AGE
+ui     LoadBalancer   10.96.199.82   178.154.240.246   80:32092/TCP   110s
+http://178.154.240.246/
+```
+##### 5. Добавим Ingress (и уберем LoadBalancer):
+```
+$ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.34.1/deploy/static/provider/cloud/deploy.yaml
+$ nano kubernetes/reddit/ui-ingress.yml
+$ kubectl apply -f kubernetes/reddit/ui-ingress.yml -n dev
+$ nano kubernetes/reddit/ui-service.yml
+$ kubectl apply -f kubernetes/reddit/ui-service.yml -n dev
+$ kubectl get ingress -A
+Warning: extensions/v1beta1 Ingress is deprecated in v1.14+, unavailable in v1.22+; use networking.k8s.io/v1 Ingress
+NAMESPACE   NAME   CLASS    HOSTS   ADDRESS         PORTS   AGE
+dev         ui     <none>   *       62.84.114.102   80      2m46s
+http://62.84.114.102/
+```
+##### 6. Добавим SSL:
+```
+$ nano kubernetes/reddit/ui-ingress.yml
+$ kubectl apply -f kubernetes/reddit/ui-ingress.yml -n dev
+$ kubectl get ingress -n dev
+Warning: extensions/v1beta1 Ingress is deprecated in v1.14+, unavailable in v1.22+; use networking.k8s.io/v1 Ingress
+NAME   CLASS    HOSTS   ADDRESS         PORTS   AGE
+ui     <none>   *       62.84.114.102   80      78s
+$ openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN=62.84.114.102"
+$ kubectl create secret tls ui-ingress --key tls.key --cert tls.crt -n dev
+$ kubectl describe secret ui-ingress -n dev
+$ nano kubernetes/reddit/ui-ingress.yml
+$ kubectl delete ingress ui -n dev
+$ kubectl apply -f kubernetes/reddit/ui-ingress.yml -n dev
+https://62.84.114.102/
+```
+##### 7. Добавим NetworkPolicy (mongodb только для post и comment:
+```
+$ nano kubernetes/reddit/mongo-network-policy.yml
+$ kubectl apply -f kubernetes/reddit/mongo-network-policy.yml -n dev
+https://62.84.114.102/
+```
+##### 8. Добавим хранилище для mongodb:
+```
+$ yc compute disk create --name k8s --size 4 --description "disk for k8s"
+$ yc compute disk list
+$ nano kubernetes/reddit/mongo-volume.yml
+$ nano kubernetes/reddit/mongo-volume-claim.yml
+$ nano kubernetes/reddit/mongo-deployment.yml
+$ kubectl delete -f kubernetes/reddit/mongo-deployment.yml -n dev
+$ kubectl apply -f kubernetes/reddit/mongo-volume.yml
+$ kubectl apply -f kubernetes/reddit/mongo-volume-claim.yml -n dev
+$ kubectl apply -f kubernetes/reddit/mongo-deployment.yml -n dev
+Пересоздание mongo не уничтожит посты в приложении
+$ kubectl delete -f kubernetes/reddit/mongo-deployment.yml -n dev
+$ kubectl apply -f kubernetes/reddit/mongo-deployment.yml -n dev
+```
+##### https://62.84.114.102/
+-----------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -31,4 +31,7 @@ spec:
           mountPath: /data/db
       volumes:
       - name: mongo-persistent-storage
-        emptyDir: {}
+        persistentVolumeClaim:
+          claimName:  mongo-pvc
+# Just fix for autotest:
+# name: mongo-gce-pd-storage
