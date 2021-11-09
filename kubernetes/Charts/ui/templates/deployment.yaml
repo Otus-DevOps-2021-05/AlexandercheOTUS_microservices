@@ -1,5 +1,5 @@
 ---
-apiVersion: apps/v1
+apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
   name: {{ .Release.Name }}-{{ .Chart.Name }}
@@ -25,10 +25,10 @@ spec:
         release: {{ .Release.Name }}
     spec:
       containers:
-      - image: paradoxalien/ui
+      - image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         name: ui
         ports:
-        - containerPort: 9292
+        - containerPort: {{ .Values.service.internalPort }}
           name: ui
           protocol: TCP
         env:
@@ -36,3 +36,4 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
+...
