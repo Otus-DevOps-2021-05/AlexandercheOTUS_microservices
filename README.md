@@ -374,3 +374,172 @@ $ kubectl apply -f kubernetes/reddit/mongo-deployment.yml -n dev
 ```
 ##### https://62.84.114.102/
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
+#### Домашнее задание №22
+#### "Создание Helm Chart’ов для компонент приложения, управление зависимостями Helm"
+##### 1. Установка Helm и tiller:
+```
+https://github.com/helm/helm/releases/tag/v2.17.0
+$ wget https://get.helm.sh/helm-v2.17.0-linux-amd64.tar.gz
+$ tar -zxvf helm-v2.17.0-linux-amd64.tar.gz
+$ sudo cp linux-amd64/helm /usr/local/bin/helm
+$ nano kubernetes/tiller.yml
+$ kubectl apply -f kubernetes/tiller.yml
+$ kubectl get serviceaccounts -n kube-system | grep tiller
+$ helm init --service-account tiller
+$ kubectl get pods -n kube-system --selector app=helm
+```
+##### 2. Helm chart для ui:
+```
+$ cd kubernetes
+$ git mv reddit/ui-deployment.yml Charts/ui/templates/deployment.yaml
+$ git mv reddit/ui-ingress.yml Charts/ui/templates/ingress.yaml
+$ git mv reddit/ui-service.yml Charts/ui/templates/service.yaml
+$ nano Charts/ui/Chart.yaml
+$ kubectl delete -f Charts/ui/templates/ -n dev
+$ kubectl get pods -n dev | grep ui
+$ cd Charts/
+$ helm install --name test-ui-1 ui/
+$ helm ls --all
+$ helm delete test-ui-1 --purge
+$ helm install --namespace dev --name test-ui-1 ui/
+$ kubectl get pods -A | grep ui
+```
+##### 3. Helm chart для ui через переменные:
+```
+$ nano deployment.yaml
+$ nano service.yaml
+$ nano ingress.yaml
+$ nano values.yaml
+$ helm install --name test-ui-2 ui/
+$ helm install --name test-ui-3 ui/
+$ helm upgrade test-ui-2 ui/
+$ helm upgrade test-ui-3 ui/
+```
+##### 4. Helm chart для ui, post и comment через переменные из values.yaml:
+```
+$ tree Charts/
+Charts/
+├── comment
+│   ├── Chart.yaml
+│   ├── templates
+│   │   ├── deployment.yaml
+│   │   └── service.yaml
+│   └── values.yaml
+├── post
+│   ├── Chart.yaml
+│   ├── templates
+│   │   ├── deployment.yaml
+│   │   └── service.yaml
+│   └── values.yaml
+├── reddit
+└── ui
+    ├── Chart.yaml
+    ├── templates
+    │   ├── deployment.yaml
+    │   ├── ingress.yaml
+    │   └── service.yaml
+    └── values.yaml
+```
+##### 5. Добавим в templates функцию _helpers.tpl (возвращает то же что и {{ .Release.Name }}-{{ .Chart.Name }}):
+```
+$ tree Charts/
+Charts/
+├── comment
+│   ├── Chart.yaml
+│   ├── templates
+│   │   ├── _helpers.tpl
+│   │   ├── deployment.yaml
+│   │   └── service.yaml
+│   └── values.yaml
+├── post
+│   ├── Chart.yaml
+│   ├── templates
+│   │   ├── _helpers.tpl
+│   │   ├── deployment.yaml
+│   │   └── service.yaml
+│   └── values.yaml
+├── reddit
+└── ui
+    ├── Chart.yaml
+    ├── templates
+    │   ├── _helpers.tpl
+    │   ├── deployment.yaml
+    │   ├── ingress.yaml
+    │   └── service.yaml
+    └── values.yaml
+```
+##### 6. Helm Chart приложения reddit (зависимости, mongo):
+```
+$ tree reddit/
+reddit/
+├── Chart.yaml
+├── requirements.lock
+├── requirements.yaml
+└── values.yaml
+$ helm dependency update
+$ helm search mongo
+$ nano requirements.yaml
+$ helm dependency update
+$ helm install reddit --name reddit-test
+$ helm ls
+NAME            REVISION        UPDATED                         STATUS          CHART           APP VERSION     NAMESPACE
+reddit-test     1               Thu Nov 11 20:08:44 2021        DEPLOYED        reddit-0.1.0                    default
+$ kubectl get ingress -A
+Warning: extensions/v1beta1 Ingress is deprecated in v1.14+, unavailable in v1.22+; use networking.k8s.io/v1 Ingress
+NAMESPACE   NAME             CLASS    HOSTS   ADDRESS         PORTS   AGE
+default     reddit-test-ui   <none>   *       62.84.114.102   80      57s
+https://62.84.114.102/
+$ helm delete reddit-test --purge
+$ nano ui/templates/deployment.yaml
+$ nano ui/values.yaml
+$ nano reddit/values.yaml
+$ helm dependency update ./reddit
+$ helm install reddit --name reddit-test
+https://62.84.114.102/
+```
+##### 7. Установка gitlab и настройка:
+```
+$ helm repo add gitlab https://charts.gitlab.io
+$ helm fetch gitlab/gitlab-omnibus --version 0.1.37 --untar
+$ cd gitlab-omnibus/
+$ nano values.yaml
+$ nano templates/gitlab/gitlab-svc.yaml
+$ nano templates/gitlab-config.yaml
+$ nano templates/ingress/gitlab-ingress.yaml
+$ helm install --name gitlab . -f values.yaml
+$ kubectl get service -n nginx-ingress nginx
+http://gitlab-gitlab
+Логин root, пароль otusgitlab, новая группа paradoxalien
+CI/CD группы, переменные CI_REGISTRY_USER и CI_REGISTRY_PASSWORD
+Новые публичные проекты reddit-deploy, ui, post, comment
+```
+##### 8. Gitlab CI/CD:
+```
+$ tree Gitlab_ci/
+Gitlab_ci/
+├── comment
+├── post
+├── reddit-deploy
+└── ui
+$ echo "Gitlab_ci/" >> .gitignore
+$ cp -r src/ui/* kubernetes/Gitlab_ci/ui
+$ cd kubernetes/Gitlab_ci/ui && git init
+$ git remote add gitlab http://gitlab-gitlab/paradoxalien/ui.git
+$ git add . && git commit -m "init" && git push gitlab
+то же для post и comment
+$ cp -r kubernetes/Charts/* kubernetes/Gitlab_ci/reddit-deploy && git push gitlab
+$ nano kubernetes/Gitlab_ci/ui/gitlab-ci.yml
+$ cd kubernetes/Gitlab_ci/reddit-deploy
+$ nano ui/templates/ingress.yaml
+$ nano ui/values.yaml
+$ git checkout -b feature/3
+$ nano ui/gitlab-ci.yml
+$ git commit -am "Add review feature"
+$ git push gitlab feature/3
+$ cp ui/gitlab-ci.yml comment/
+$ cp ui/gitlab-ci.yml post/
+$ nano reddit-deploy/gitlab-ci.yml
+$ nano ui/gitlab-ci.yml
+$ git push gitlab
+```
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
